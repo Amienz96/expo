@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRoutes = getRoutes;
-exports.getIgnoreList = getIgnoreList;
 exports.extrapolateGroups = extrapolateGroups;
 exports.generateDynamic = generateDynamic;
 const matchers_1 = require("./matchers");
@@ -31,6 +30,19 @@ function getRoutes(contextModule, options) {
     }
     return rootNode;
 }
+function getNameFromRedirectPath(path) {
+    // Removing only the filesystem extensions, to be able to handle +api, +html
+    return ((0, matchers_1.removeFileSystemExtensions)((0, matchers_1.removeFileSystemDots)(path))
+        // Remove the leading `/`
+        .replace(/^\//, ''));
+}
+// Creates fake context key for redirects and rewrites
+function getSourceContextKeyFromRedirectSource(source) {
+    const name = getNameFromRedirectPath(source);
+    const prefix = './';
+    const suffix = /\.[tj]sx?$/.test(name) ? '' : '.js'; // Ensure it has a file extension
+    return `${prefix}${name}${suffix}`;
+}
 /**
  * Converts the RequireContext keys (file paths) into a directory tree.
  */
@@ -53,38 +65,56 @@ function getDirectoryTree(contextModule, options) {
     const redirects = {};
     const rewrites = {};
     let validRedirectDestinations;
+    const getValidDestinations = () => {
+        // Loop over contexts once and cache the valid destinations
+        validRedirectDestinations ??= contextKeys.map((key) => {
+            return {
+                contextKey: key,
+                nameWithoutInvisible: getNameFromRedirectPath(key),
+            };
+        });
+        return validRedirectDestinations;
+    };
     // If we are keeping redirects as valid routes, then we need to add them to the contextKeys
     // This is useful for generating a sitemap with redirects, or static site generation that includes redirects
     if (options.preserveRedirectAndRewrites) {
         if (options.redirects) {
             for (const redirect of options.redirects) {
-                const source = (0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(redirect.source.replace(/^\.?\//, '')));
+                const sourceContextKey = getSourceContextKeyFromRedirectSource(redirect.source);
+                const sourceName = getNameFromRedirectPath(redirect.source);
                 const isExternalRedirect = (0, url_1.shouldLinkExternally)(redirect.destination);
-                const targetDestination = isExternalRedirect
+                const targetDestinationName = isExternalRedirect
                     ? redirect.destination
-                    : (0, matchers_1.stripInvisibleSegmentsFromPath)((0, matchers_1.removeFileSystemDots)((0, matchers_1.removeFileSystemExtensions)(redirect.destination.replace(/^\.?\//, ''))));
-                if (ignoreList.some((regex) => regex.test(source))) {
+                    : getNameFromRedirectPath(redirect.destination);
+                if (ignoreList.some((regex) => regex.test(sourceContextKey))) {
                     continue;
                 }
-                // Loop over this once and cache the valid destinations
-                validRedirectDestinations ??= contextKeys.map((key) => {
-                    return [
-                        (0, matchers_1.stripInvisibleSegmentsFromPath)((0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(key))).replace(/^\.?\//, ''),
-                        key,
-                    ];
-                });
+                const validDestination = isExternalRedirect
+                    ? undefined
+                    : getValidDestinations().find((key) => key.nameWithoutInvisible === targetDestinationName);
                 const destination = isExternalRedirect
-                    ? targetDestination
-                    : validRedirectDestinations.find((key) => key[0] === targetDestination)?.[0];
-                if (!destination) {
-                    if (options.preserveRedirectAndRewrites) {
+                    ? targetDestinationName
+                    : validDestination?.nameWithoutInvisible;
+                const destinationContextKey = isExternalRedirect
+                    ? targetDestinationName
+                    : validDestination?.contextKey;
+                if (!destinationContextKey || destination === undefined) {
+                    /*
+                     * Only throw the error when we are preserving the api routes
+                     * When doing a static export, API routes will not exist so the redirect destination may not exist.
+                     * The desired behavior for this error is to warn the user when running `expo start`, so its ok if
+                     * `expo export` swallows this error.
+                     */
+                    if (options.preserveApiRoutes) {
                         throw new Error(`Redirect destination "${redirect.destination}" does not exist.`);
                     }
                     continue;
                 }
-                redirects[source] = {
-                    source,
+                contextKeys.push(sourceContextKey);
+                redirects[sourceName] = {
+                    source: sourceName,
                     destination,
+                    destinationContextKey,
                     permanent: Boolean(redirect.permanent),
                     external: isExternalRedirect,
                     methods: redirect.methods,
@@ -93,20 +123,16 @@ function getDirectoryTree(contextModule, options) {
         }
         if (options.rewrites) {
             for (const rewrite of options.rewrites) {
-                const source = (0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(rewrite.source.replace(/^\.?\//, '')));
-                const targetDestination = (0, matchers_1.stripInvisibleSegmentsFromPath)((0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(rewrite.destination)));
-                if (ignoreList.some((regex) => regex.test(source))) {
+                const sourceContextKey = getSourceContextKeyFromRedirectSource(rewrite.source);
+                const sourceName = getNameFromRedirectPath(rewrite.source);
+                const targetDestinationName = getNameFromRedirectPath(rewrite.destination);
+                if (ignoreList.some((regex) => regex.test(sourceContextKey))) {
                     continue;
                 }
-                // Loop over this once and cache the valid destinations
-                validRedirectDestinations ??= contextKeys.map((key) => {
-                    return [
-                        (0, matchers_1.stripInvisibleSegmentsFromPath)((0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(key))),
-                        key,
-                    ];
-                });
-                const destination = validRedirectDestinations.find((key) => key[0] === targetDestination)?.[1];
-                if (!destination) {
+                const validDestination = getValidDestinations().find((key) => key.nameWithoutInvisible === targetDestinationName);
+                const destination = validDestination?.nameWithoutInvisible;
+                const destinationContextKey = validDestination?.contextKey;
+                if (!destinationContextKey || destination === undefined) {
                     /*
                      * Only throw the error when we are preserving the api routes
                      * When doing a static export, API routes will not exist so the redirect destination may not exist.
@@ -114,11 +140,17 @@ function getDirectoryTree(contextModule, options) {
                      * `expo export` swallows this error.
                      */
                     if (options.preserveApiRoutes) {
-                        throw new Error(`Redirect destination "${rewrite.destination}" does not exist.`);
+                        throw new Error(`Rewrite destination "${rewrite.destination}" does not exist.`);
                     }
                     continue;
                 }
-                rewrites[source] = { source, destination, methods: rewrite.methods };
+                contextKeys.push(sourceContextKey);
+                rewrites[sourceName] = {
+                    source: sourceName,
+                    destination,
+                    destinationContextKey,
+                    methods: rewrite.methods,
+                };
             }
         }
     }
@@ -177,13 +209,13 @@ function getDirectoryTree(contextModule, options) {
                 continue;
             }
             const redirect = redirects[meta.route];
-            node.destinationContextKey = redirect.destination;
+            node.destinationContextKey = redirect.destinationContextKey;
             node.permanent = redirect.permanent;
             node.generated = true;
             if (node.type === 'route') {
                 node = options.getSystemRoute({
                     type: 'redirect',
-                    route: (0, matchers_1.removeFileSystemDots)((0, matchers_1.removeSupportedExtensions)(node.destinationContextKey)),
+                    route: redirect.destination,
                     defaults: node,
                     redirectConfig: redirect,
                 });
@@ -199,17 +231,15 @@ function getDirectoryTree(contextModule, options) {
                 continue;
             }
             const rewrite = rewrites[meta.route];
-            node.destinationContextKey = rewrite.destination;
+            node.destinationContextKey = rewrite.destinationContextKey;
             node.generated = true;
             if (node.type === 'route') {
-                node = {
-                    ...node,
-                    ...options.getSystemRoute({
-                        type: 'rewrite',
-                        route: node.destinationContextKey,
-                        rewriteConfig: rewrite,
-                    }),
-                };
+                node = options.getSystemRoute({
+                    type: 'rewrite',
+                    route: rewrite.destination,
+                    defaults: node,
+                    rewriteConfig: rewrite,
+                });
             }
             if (rewrite.methods) {
                 node.methods = rewrite.methods;
@@ -446,13 +476,6 @@ function getFileMeta(originalKey, options, redirects, rewrites) {
         isRedirect: key in redirects,
         isRewrite: key in rewrites,
     };
-}
-function getIgnoreList(options) {
-    const ignore = [/^\.\/\+html\.[tj]sx?$/, ...(options?.ignore ?? [])];
-    if (options?.preserveApiRoutes !== true) {
-        ignore.push(/\+api\.[tj]sx?$/);
-    }
-    return ignore;
 }
 /**
  * Generates a set of strings which have the router array syntax extrapolated.
