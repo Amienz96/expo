@@ -1,0 +1,92 @@
+.modal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  pointer-events: auto;
+  border: 1px solid rgba(61.2, 61.2, 66, 0.29);
+  background-color: rgba(242.25, 242.25, 247.35, 1);
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+@media (min-width: 768px) {
+  .modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 50;
+    width: 100%;
+    max-width: 55rem;
+    min-height: clamp(15rem, 30vh, 50rem);
+    max-height: calc(100vh - 4rem);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    /* Replace with your shadow variable */
+    overflow: auto;
+    outline: none;
+  }
+}
+
+.drawerContent {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  height: 100%;
+  max-height: 97vh;
+  outline: none;
+}
+
+@media (min-width: 768px) {
+  .drawerContent {
+    max-height: 100%;
+    pointer-events: box-none;
+  }
+}
+
+.modal::-webkit-scrollbar {
+  width: 0px;
+  /* unsichtbar                */
+  height: 0px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.modalBody {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Ensure bottom sheets (inside drawerContent) can shrink to any detent */
+.drawerContent .modal {
+  /* Reset inherited centering */
+  position: relative;
+  left: 0;
+  top: 0;
+  transform: none;
+  box-shadow: none;
+  border-radius: inherit;
+  min-height: auto;
+  max-height: none;
+}
+
+/* Form-sheet style (snap-point based) should be full width */
+.drawerContent .modal[data-presentation='formSheet'],
+.drawerContent .modal[data-presentation='containedModal'] {
+  width: 100%;
+  max-width: none;
+}
+
+/* Regular modal keeps desktop max-width for nicer look */
+.drawerContent .modal[data-presentation='modal'] {
+  width: 100%;
+  max-width: 55rem;
+  margin: 0 auto;
+}
