@@ -84,8 +84,48 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
         backgroundColor: themeColors.background,
         ...baseContentStyle,
     };
-    // Outer sheet wrapper only needs borderRadius now
-    const wrapperStyle = options.sheetCornerRadius != null ? { borderRadius: options.sheetCornerRadius } : {};
+    // If user specifies a numeric maxHeight, clamp it to viewport height
+    if (mergedContentStyle.maxHeight != null && typeof mergedContentStyle.maxHeight === 'number') {
+        const h = mergedContentStyle.maxHeight;
+        mergedContentStyle.maxHeight = `min(${h}px, calc(100vh - 4rem))`;
+    }
+    const isSheet = options.presentation === 'formSheet';
+    // Provide a safe default maxHeight for desktop modal when none specified
+    if (!isSheet &&
+        (mergedContentStyle.maxHeight == null || mergedContentStyle.maxHeight === 'auto')) {
+        mergedContentStyle.maxHeight = 'calc(100vh - 8rem)'; // 4rem top + 4rem bottom breathing room
+    }
+    // Default minHeight for desktop modal if none specified
+    if (!isSheet && mergedContentStyle.minHeight == null) {
+        mergedContentStyle.minHeight = 'clamp(15rem, 30vh, calc(100vh - 8rem))';
+    }
+    // Clamp numeric minHeight to viewport
+    if (mergedContentStyle.minHeight != null && typeof mergedContentStyle.minHeight === 'number') {
+        const mh = mergedContentStyle.minHeight;
+        mergedContentStyle.minHeight = `min(${mh}px, calc(100vh - 8rem))`;
+    }
+    // Normalize shorthand `margin` so centred desktop modal keeps horizontal centring.
+    if (mergedContentStyle.margin != null &&
+        mergedContentStyle.marginLeft == null &&
+        mergedContentStyle.marginRight == null) {
+        const m = mergedContentStyle.margin;
+        // Remove shorthand to avoid conflict
+        delete mergedContentStyle.margin;
+        mergedContentStyle.marginTop = mergedContentStyle.marginTop ?? m;
+        mergedContentStyle.marginBottom = mergedContentStyle.marginBottom ?? m;
+        mergedContentStyle.marginLeft = 'auto';
+        mergedContentStyle.marginRight = 'auto';
+    }
+    const wrapperStyle = {};
+    if (options.sheetCornerRadius != null) {
+        if (!isSheet) {
+            wrapperStyle.borderRadius = options.sheetCornerRadius;
+        }
+        else {
+            wrapperStyle.borderTopLeftRadius = options.sheetCornerRadius;
+            wrapperStyle.borderTopRightRadius = options.sheetCornerRadius;
+        }
+    }
     const handleOpenChange = (open) => {
         if (!open)
             onDismiss();
@@ -94,12 +134,16 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
       <vaul_1.Drawer.Portal>
         <vaul_1.Drawer.Overlay style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}/>
         <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{ ...wrapperStyle, pointerEvents: 'none' }}>
-          <div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
-            {options.sheetGrabberVisible && (<div className={modal_module_css_1.default.grabberRow}>
-                <div className={modal_module_css_1.default.grabber}/>
-              </div>)}
-            <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
-          </div>
+          {!isSheet ? (<div className={modal_module_css_1.default.modalWrap}>
+              <div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
+                <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
+              </div>
+            </div>) : (<div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
+              {options.sheetGrabberVisible && (<div className={modal_module_css_1.default.grabberRow}>
+                  <div className={modal_module_css_1.default.grabber}/>
+                </div>)}
+              <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
+            </div>)}
         </vaul_1.Drawer.Content>
       </vaul_1.Drawer.Portal>
     </vaul_1.Drawer.Root>);

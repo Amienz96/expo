@@ -8,6 +8,15 @@ export default function Page() {
         style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
         Full Screen Modal
       </Text>
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
+      <Text>This modal should occupy the full screen (no detents).</Text>{' '}
       <Text>This modal should occupy the full screen (no detents).</Text>
     </View>
   );
