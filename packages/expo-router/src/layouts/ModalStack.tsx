@@ -197,7 +197,7 @@ function RouteDrawer({
       setActiveSnapPoint={setSnap}
       shouldScaleBackground={options.presentation !== 'formSheet'}
       fadeFromIndex={fadeFromIndex}
-      dismissible
+      dismissible={options.gestureEnabled ?? true}
       onAnimationEnd={handleOpenChange}
       onOpenChange={setOpen}>
       <Drawer.Portal>

@@ -31,6 +31,9 @@ export default function Layout() {
         options={{
           presentation: 'modal',
           sheetCornerRadius: 0,
+          contentStyle: {
+            padding: 40,
+          },
         }}
       />
     </Stack>

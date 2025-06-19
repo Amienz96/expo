@@ -89,7 +89,7 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
         if (!open)
             onDismiss();
     };
-    return (<vaul_1.Drawer.Root key={routeKey} open={open} snapPoints={snapPoints} activeSnapPoint={snap} setActiveSnapPoint={setSnap} shouldScaleBackground={options.presentation !== 'formSheet'} fadeFromIndex={fadeFromIndex} dismissible onAnimationEnd={handleOpenChange} onOpenChange={setOpen}>
+    return (<vaul_1.Drawer.Root key={routeKey} open={open} snapPoints={snapPoints} activeSnapPoint={snap} setActiveSnapPoint={setSnap} shouldScaleBackground={options.presentation !== 'formSheet'} fadeFromIndex={fadeFromIndex} dismissible={options.gestureEnabled ?? true} onAnimationEnd={handleOpenChange} onOpenChange={setOpen}>
       <vaul_1.Drawer.Portal>
         <vaul_1.Drawer.Overlay style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}/>
         <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{ pointerEvents: 'none' }}>
