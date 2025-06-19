@@ -170,7 +170,7 @@ function RouteDrawer({
           : 0
       : 0;
 
-  // Merge provided contentStyle with defaults
+  // Merge provided contentStyle with defaults (applies to inner modal body)
   const baseContentStyle: React.CSSProperties =
     options.contentStyle &&
     typeof options.contentStyle === 'object' &&
@@ -181,8 +181,11 @@ function RouteDrawer({
   const mergedContentStyle: React.CSSProperties = {
     backgroundColor: themeColors.background,
     ...baseContentStyle,
-    ...(options.sheetCornerRadius != null ? { borderRadius: options.sheetCornerRadius } : {}),
   };
+
+  // Outer sheet wrapper only needs borderRadius now
+  const wrapperStyle: React.CSSProperties =
+    options.sheetCornerRadius != null ? { borderRadius: options.sheetCornerRadius } : {};
 
   const handleOpenChange = (open: boolean) => {
     if (!open) onDismiss();
@@ -204,7 +207,9 @@ function RouteDrawer({
         <Drawer.Overlay
           style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}
         />
-        <Drawer.Content className={modalStyles.drawerContent} style={{ pointerEvents: 'none' }}>
+        <Drawer.Content
+          className={modalStyles.drawerContent}
+          style={{ ...wrapperStyle, pointerEvents: 'none' }}>
           <div
             className={modalStyles.modal}
             data-presentation={options.presentation}

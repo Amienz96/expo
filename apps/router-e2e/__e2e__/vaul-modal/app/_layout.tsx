@@ -30,9 +30,10 @@ export default function Layout() {
         name="modal-full"
         options={{
           presentation: 'modal',
-          sheetCornerRadius: 0,
+          sheetCornerRadius: 20,
           contentStyle: {
-            padding: 40,
+            padding: 10,
+            margin: 20,
           },
         }}
       />

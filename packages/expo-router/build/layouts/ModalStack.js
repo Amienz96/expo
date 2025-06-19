@@ -74,7 +74,7 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
                 ? options.sheetLargestUndimmedDetentIndex + 1
                 : 0
         : 0;
-    // Merge provided contentStyle with defaults
+    // Merge provided contentStyle with defaults (applies to inner modal body)
     const baseContentStyle = options.contentStyle &&
         typeof options.contentStyle === 'object' &&
         !Array.isArray(options.contentStyle)
@@ -83,8 +83,9 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
     const mergedContentStyle = {
         backgroundColor: themeColors.background,
         ...baseContentStyle,
-        ...(options.sheetCornerRadius != null ? { borderRadius: options.sheetCornerRadius } : {}),
     };
+    // Outer sheet wrapper only needs borderRadius now
+    const wrapperStyle = options.sheetCornerRadius != null ? { borderRadius: options.sheetCornerRadius } : {};
     const handleOpenChange = (open) => {
         if (!open)
             onDismiss();
@@ -92,7 +93,7 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
     return (<vaul_1.Drawer.Root key={routeKey} open={open} snapPoints={snapPoints} activeSnapPoint={snap} setActiveSnapPoint={setSnap} shouldScaleBackground={options.presentation !== 'formSheet'} fadeFromIndex={fadeFromIndex} dismissible={options.gestureEnabled ?? true} onAnimationEnd={handleOpenChange} onOpenChange={setOpen}>
       <vaul_1.Drawer.Portal>
         <vaul_1.Drawer.Overlay style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}/>
-        <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{ pointerEvents: 'none' }}>
+        <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{ ...wrapperStyle, pointerEvents: 'none' }}>
           <div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
             {options.sheetGrabberVisible && (<div className={modal_module_css_1.default.grabberRow}>
                 <div className={modal_module_css_1.default.grabber}/>
