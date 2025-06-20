@@ -42,7 +42,12 @@ class AudioRecorder: SharedRef<AVAudioRecorder>, RecordingResultHandler {
 
   func prepare(options: RecordingOptions?) throws {
     do {
-      try recordingSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+      var sessionOptions: AVAudioSession.CategoryOptions = [.allowBluetooth]
+
+      if let options, !options.allowBluetoothAudio {
+        sessionOptions = [.defaultToSpeaker]
+      }
+      try recordingSession.setCategory(.playAndRecord, mode: .default, options: sessionOptions)
       try recordingSession.setActive(true)
     } catch {
       throw AudioRecordingException("Failed to configure audio session: \(error.localizedDescription)")
@@ -80,6 +85,11 @@ class AudioRecorder: SharedRef<AVAudioRecorder>, RecordingResultHandler {
     startTimestamp = 0
     previousRecordingDuration = 0
     isPrepared = false
+
+    do {
+      try recordingSession.setActive(false, options: [.notifyOthersOnDeactivation])
+    } catch {
+    }
   }
 
   func pauseRecording() {
