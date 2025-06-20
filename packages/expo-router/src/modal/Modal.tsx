@@ -1,5 +1,4 @@
-import { type ParamListBase } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { type NavigationProp, type ParamListBase } from '@react-navigation/native';
 import { nanoid } from 'nanoid/non-secure';
 import { useEffect, useState } from 'react';
 
@@ -15,14 +14,14 @@ export interface ModalProps {
 export function Modal({ children, visible, onClose }: ModalProps) {
   const { openModal, closeModal, addEventListener } = useModalContext();
   const [currentModalId, setCurrentModalId] = useState<string | undefined>();
-  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   useEffect(() => {
     if (visible) {
       const newId = nanoid();
       openModal({
         component: children,
         uniqueId: newId,
-        navigationProp: navigation,
+        parentNavigationProp: navigation,
       });
       setCurrentModalId(newId);
     } else {
@@ -32,6 +31,7 @@ export function Modal({ children, visible, onClose }: ModalProps) {
     }
     return () => {};
   }, [visible]);
+
   useEffect(() => {
     if (currentModalId) {
       return addEventListener('close', (id) => {

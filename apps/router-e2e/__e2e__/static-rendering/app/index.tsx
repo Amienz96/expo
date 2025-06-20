@@ -1,55 +1,78 @@
-import { Modal, useNavigation, usePathname, useSegments } from 'expo-router';
+import { Link, Modal, usePathname, useSegments } from 'expo-router';
 import { useState } from 'react';
 import { Button, Text, View } from 'react-native';
 
 export default function Page() {
-  const [openModals, setOpenModals] = useState([false, false, false]);
+  const [isModal1Open, setIsModal1Open] = useState(false);
+  const [isModal2Open, setIsModal2Open] = useState(false);
+  const [isModal3Open, setIsModal3Open] = useState(false);
+
+  const closeModal = (index: number) => {
+    console.log(`Close modal ${index} pressed`);
+    switch (index) {
+      case 1:
+        setIsModal1Open(false);
+        break;
+      case 2:
+        setIsModal2Open(false);
+        break;
+      case 3:
+        setIsModal3Open(false);
+        break;
+    }
+  };
+
   const pathname = usePathname();
   return (
     <View>
       <Text testID="index-text" style={{ fontFamily: 'sweet' }}>
         Index ({pathname})
       </Text>
+      <Link href="/about" style={{ marginVertical: 16 }}>
+        Go to About
+      </Link>
       <Button
         title="Open modal"
         onPress={() => {
-          setOpenModals((prev) => {
-            const newOpenModals = [...prev];
-            newOpenModals[0] = true;
-            return newOpenModals;
-          });
+          setIsModal1Open(true);
         }}
       />
-      {openModals.map((isOpen, index) => (
-        <Modal
-          key={index}
-          visible={isOpen}
-          onClose={() => {
-            setOpenModals((prev) => {
-              const newOpenModals = [...prev];
-              newOpenModals[index] = false;
-              return newOpenModals;
-            });
-          }}>
-          <ModalContent
-            index={index}
-            onCloseButtonPressed={() => {
-              setOpenModals((prev) => {
-                const newOpenModals = [...prev];
-                newOpenModals[index] = false;
-                return newOpenModals;
-              });
-            }}
-            onOpenAnotherModal={() => {
-              setOpenModals((prev) => {
-                const newOpenModals = [...prev];
-                newOpenModals[index + 1] = true;
-                return newOpenModals;
-              });
-            }}
-          />
-        </Modal>
-      ))}
+      <Modal
+        visible={isModal1Open}
+        onClose={() => {
+          console.log('Modal 1 closed');
+          setIsModal1Open(false);
+        }}>
+        <ModalContent
+          index={1}
+          onCloseButtonPressed={closeModal}
+          onOpenAnotherModal={() => {
+            setIsModal2Open(true);
+          }}
+        />
+      </Modal>
+      <Modal
+        visible={isModal2Open}
+        onClose={() => {
+          console.log('Modal 2 closed');
+          setIsModal2Open(false);
+        }}>
+        <ModalContent
+          index={2}
+          onCloseButtonPressed={closeModal}
+          onOpenAnotherModal={() => {
+            setIsModal3Open(true);
+          }}
+        />
+      </Modal>
+      <Modal
+        visible={isModal3Open}
+        onClose={() => {
+          console.log('Modal 3 closed');
+          setIsModal3Open(false);
+        }}>
+        <ModalContent index={3} onCloseButtonPressed={closeModal} onOpenAnotherModal={() => {}} />
+      </Modal>
     </View>
   );
 }
@@ -59,11 +82,10 @@ function ModalContent({
   onOpenAnotherModal,
   index,
 }: {
-  onCloseButtonPressed: () => void;
+  onCloseButtonPressed: (index: number) => void;
   onOpenAnotherModal: () => void;
   index: number;
 }) {
-  const navigation = useNavigation();
   const pathname = usePathname();
   const segments = useSegments();
 
@@ -71,7 +93,7 @@ function ModalContent({
     <View
       style={{
         flex: 1,
-        backgroundColor: '#f00',
+        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
@@ -79,8 +101,10 @@ function ModalContent({
       <Text>{pathname}</Text>
       <Text>{segments}</Text>
       <Button title="Open another modal" onPress={onOpenAnotherModal} />
-      <Button title="goBack" onPress={() => navigation.goBack()} />
-      <Button title="close" onPress={onCloseButtonPressed} />
+      <Button title="Close me" onPress={() => onCloseButtonPressed(index)} />
+      <Button title="Close 1" onPress={() => onCloseButtonPressed(1)} />
+      <Button title="Close 2" onPress={() => onCloseButtonPressed(2)} />
+      <Button title="Close 3" onPress={() => onCloseButtonPressed(3)} />
     </View>
   );
 }

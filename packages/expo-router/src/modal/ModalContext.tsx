@@ -1,18 +1,23 @@
-import { type ParamListBase } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { nanoid } from 'nanoid/non-secure';
 import {
   createContext,
   use,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
+import { StyleSheet } from 'react-native';
+import { ScreenStack, ScreenStackItem } from 'react-native-screens';
 
-interface ModalConfig {
+import { ModalComponent } from './ModalComponent';
+
+export interface ModalConfig {
   component: React.ReactNode;
-  navigationProp: NativeStackNavigationProp<ParamListBase>;
+  parentNavigationProp: NavigationProp<ParamListBase>;
   uniqueId: string;
 }
 
@@ -41,25 +46,20 @@ export const ModalContextProvider = ({ children }: PropsWithChildren) => {
     }
   }, [modalConfigs]);
 
-  const openModal = useCallback(function openModal(config: ModalConfig) {
-    setModalConfigs((prev) => {
-      const newModalConfigs = [...prev, config];
-      config.navigationProp.push('__internal__modal', { id: config.uniqueId });
-      return newModalConfigs;
-    });
+  const openModal = useCallback(
+    (config: ModalConfig) => setModalConfigs((prev) => [...prev, config]),
+    []
+  );
+
+  const emitCloseEvent = useCallback((id: string) => {
+    eventListeners.current.forEach((callback) => callback(id));
   }, []);
 
   const closeModal = useCallback((id: string) => {
+    console.log(`Closing modal with id: ${id}`);
     setModalConfigs((prev) => {
       const modalIndex = prev.findIndex((config) => config.uniqueId === id);
       if (modalIndex >= 0) {
-        if (modalIndex > 0) {
-          prev[modalIndex].navigationProp.popTo('__internal__modal', {
-            id: prev[modalIndex - 1].uniqueId,
-          });
-        } else {
-          prev[modalIndex].navigationProp.popToTop();
-        }
         return prev.filter((_, index) => index < modalIndex);
       }
       return prev;
@@ -81,16 +81,44 @@ export const ModalContextProvider = ({ children }: PropsWithChildren) => {
     };
   }, []);
 
+  const rootId = useMemo(() => nanoid(), []);
+
   return (
-    <ModalContext.Provider
-      value={{
-        modalConfigs,
-        openModal,
-        closeModal,
-        addEventListener,
-      }}>
-      {children}
-    </ModalContext.Provider>
+    <ScreenStack style={{ flex: 1 }}>
+      <ScreenStackItem
+        screenId={rootId}
+        activityState={2}
+        style={StyleSheet.absoluteFill}
+        headerConfig={{
+          hidden: true,
+        }}>
+        <ModalContext.Provider
+          value={{
+            modalConfigs,
+            openModal,
+            closeModal,
+            addEventListener,
+          }}>
+          {children}
+        </ModalContext.Provider>
+      </ScreenStackItem>
+      {modalConfigs.map((config) => (
+        <ScreenStackItem
+          key={config.uniqueId}
+          screenId={`${rootId}${config.uniqueId}`}
+          activityState={2}
+          stackPresentation="modal"
+          style={StyleSheet.absoluteFill}
+          onWillDisappear={() => {
+            closeModal(config.uniqueId);
+          }}
+          onDisappear={() => {
+            emitCloseEvent(config.uniqueId);
+          }}>
+          <ModalComponent modalConfig={config} />
+        </ScreenStackItem>
+      ))}
+    </ScreenStack>
   );
 };
 

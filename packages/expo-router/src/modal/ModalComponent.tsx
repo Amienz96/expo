@@ -1,29 +1,15 @@
 import { NavigationContext } from '@react-navigation/native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 
-import { useModalContext } from './ModalContext';
-import { useNavigation } from '../useNavigation';
+import { type ModalConfig } from './ModalContext';
 
-export function ModalComponent({
-  route,
-}: NativeStackScreenProps<{ __internal__modal: { id: string } }>) {
-  const { modalConfigs, closeModal } = useModalContext();
-  const navigation = useNavigation();
-  const id = (route.params as { id: string }).id;
-  const modalConfig = useMemo(
-    () => modalConfigs.find((config) => config.uniqueId === id),
-    [modalConfigs, id]
-  );
-  const component = modalConfig?.component;
-  const navigationProp = modalConfig?.navigationProp;
+interface ModalComponentProps {
+  modalConfig: ModalConfig;
+}
 
-  useEffect(() => {
-    return navigation.addListener('beforeRemove', () => {
-      closeModal(id);
-    });
-  }, [navigation]);
+export function ModalComponent({ modalConfig }: ModalComponentProps) {
+  const component = modalConfig.component;
+  const navigationProp = modalConfig.parentNavigationProp;
 
   if (navigationProp) {
     return (

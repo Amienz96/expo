@@ -1,9 +1,8 @@
-import { type ParamListBase } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { type PropsWithChildren } from 'react';
-interface ModalConfig {
+export interface ModalConfig {
     component: React.ReactNode;
-    navigationProp: NativeStackNavigationProp<ParamListBase>;
+    parentNavigationProp: NavigationProp<ParamListBase>;
     uniqueId: string;
 }
 export interface ModalContextType {
@@ -14,5 +13,4 @@ export interface ModalContextType {
 }
 export declare const ModalContextProvider: ({ children }: PropsWithChildren) => import("react").JSX.Element;
 export declare const useModalContext: () => ModalContextType;
-export {};
 //# sourceMappingURL=ModalContext.d.ts.map

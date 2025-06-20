@@ -1,7 +1,7 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-export declare function ModalComponent({ route, }: NativeStackScreenProps<{
-    __internal__modal: {
-        id: string;
-    };
-}>): import("react").JSX.Element;
+import { type ModalConfig } from './ModalContext';
+interface ModalComponentProps {
+    modalConfig: ModalConfig;
+}
+export declare function ModalComponent({ modalConfig }: ModalComponentProps): import("react").JSX.Element;
+export {};
 //# sourceMappingURL=ModalComponent.d.ts.map

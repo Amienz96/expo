@@ -15,7 +15,7 @@ function Modal({ children, visible, onClose }) {
             openModal({
                 component: children,
                 uniqueId: newId,
-                navigationProp: navigation,
+                parentNavigationProp: navigation,
             });
             setCurrentModalId(newId);
         }

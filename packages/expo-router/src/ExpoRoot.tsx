@@ -14,7 +14,6 @@ import { store, useStore } from './global-state/router-store';
 import { ServerContext, ServerContextType } from './global-state/serverLocationContext';
 import { StoreContext } from './global-state/storeContext';
 import { ImperativeApiEmitter } from './imperative-api';
-import { ModalComponent } from './modal/ModalComponent';
 import { ModalContextProvider } from './modal/ModalContext';
 import { RequireContext } from './types';
 import { canOverrideStatusBarBehavior } from './utils/statusbar';
@@ -154,10 +153,8 @@ function ContextNavigator({
         onReady={store.onReady}>
         <ServerContext.Provider value={serverContext}>
           <WrapperComponent>
-            <ModalContextProvider>
-              <ImperativeApiEmitter />
-              <Content />
-            </ModalContextProvider>
+            <ImperativeApiEmitter />
+            <Content />
           </WrapperComponent>
         </ServerContext.Provider>
       </UpstreamNavigationContainer>
@@ -169,14 +166,11 @@ const RootNativeStack = createNativeStackNavigator();
 
 function Content() {
   return (
-    <RootNativeStack.Navigator screenOptions={{ headerShown: false }}>
-      <RootNativeStack.Screen name={INTERNAL_SLOT_NAME} component={store.rootComponent} />
-      <RootNativeStack.Screen
-        name="__internal__modal"
-        component={ModalComponent}
-        options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-      />
-    </RootNativeStack.Navigator>
+    <ModalContextProvider>
+      <RootNativeStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootNativeStack.Screen name={INTERNAL_SLOT_NAME} component={store.rootComponent} />
+      </RootNativeStack.Navigator>
+    </ModalContextProvider>
   );
 }
 
