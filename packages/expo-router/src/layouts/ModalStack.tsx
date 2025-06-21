@@ -301,7 +301,7 @@ function RouteDrawer({
  * Hook that returns `true` when the viewport width is considered desktop-sized.
  * The default breakpoint is 1024 px (iPad landscape and larger).
  */
-function useIsDesktop(breakpoint: number = 1024) {
+function useIsDesktop(breakpoint: number = 768) {
   const isWeb = Platform.OS === 'web';
 
   const [isDesktop, setIsDesktop] = React.useState<boolean>(() => {

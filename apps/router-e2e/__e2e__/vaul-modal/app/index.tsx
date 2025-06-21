@@ -37,6 +37,12 @@ export default function Page() {
 
         <View style={{ marginLeft: 16, alignItems: 'center' }}>
           <Pressable
+            testID="open-modal-regular"
+            onPress={() => router.push('/modal-regular')}
+            style={[styles.button, { backgroundColor: '#5856D6' }]}>
+            <Text style={styles.buttonText}>Modal (Regular)</Text>
+          </Pressable>
+          <Pressable
             testID="open-modal-full"
             onPress={() => router.push('/modal-full')}
             style={[styles.button, { backgroundColor: '#34C759' }]}>
@@ -46,7 +52,7 @@ export default function Page() {
           <Pressable
             testID="open-modal-small"
             onPress={() => router.push('/modal-small')}
-            style={[styles.button, { backgroundColor: '#5856D6' }]}>
+            style={[styles.button, { backgroundColor: '#FF2D55' }]}>
             <Text style={styles.buttonText}>Modal (fit content)</Text>
           </Pressable>
         </View>

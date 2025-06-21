@@ -20,7 +20,7 @@ export default function Layout() {
         name="modal-multi"
         options={{
           presentation: 'formSheet',
-          sheetAllowedDetents: [0.25, 0.5, 0.75, 0.98],
+          sheetAllowedDetents: [0.2, 0.5, 0.8, 0.98],
           sheetGrabberVisible: true,
         }}
       />
@@ -30,6 +30,13 @@ export default function Layout() {
           presentation: 'modal',
           sheetCornerRadius: 0,
           sheetAllowedDetents: 'fitToContents',
+        }}
+      />
+      <Stack.Screen
+        name="modal-regular"
+        options={{
+          presentation: 'modal',
+          sheetAllowedDetents: [0.4],
         }}
       />
       <Stack.Screen
@@ -55,7 +62,7 @@ export default function Layout() {
         name="sheet-radius"
         options={{
           presentation: 'formSheet',
-          sheetAllowedDetents: [0.5, 1],
+          sheetAllowedDetents: [0.4],
           sheetCornerRadius: 32,
           sheetGrabberVisible: true,
         }}

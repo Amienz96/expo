@@ -184,7 +184,7 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
  * Hook that returns `true` when the viewport width is considered desktop-sized.
  * The default breakpoint is 1024 px (iPad landscape and larger).
  */
-function useIsDesktop(breakpoint = 1024) {
+function useIsDesktop(breakpoint = 768) {
     const isWeb = react_native_1.Platform.OS === 'web';
     const [isDesktop, setIsDesktop] = react_1.default.useState(() => {
         if (!isWeb || typeof window === 'undefined')
