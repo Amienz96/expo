@@ -9,29 +9,23 @@
   overflow: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .modal {
     position: relative;
     z-index: 50;
-    width: 100%;
-    max-width: 55rem;
-    max-height: calc(100vh - 4rem);
+    /* Default width 580px (iPad modals) but responsive up to 90vw unless overridden */
+    width: var(--modal-width, 580px);
+    min-width: var(--modal-min-width, auto);
+    /* If --modal-width is provided use that, otherwise default clamp */
+    max-width: var(--modal-max-width, 90vw);
+    /* Clamp height so modal never exceeds viewport minus 2rem padding */
+    max-height: min(var(--modal-height, 640px), calc(100vh - 2rem));
+    /* Ensure modal retains a reasonable minimum but never bigger than viewport */
+    min-height: min(var(--modal-min-height, var(--modal-height, 640px)), calc(100vh - 2rem));
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
       0 4px 6px -4px rgb(0 0 0 / 0.1);
     overflow: auto;
     outline: none;
-  }
-
-  .modalWrap {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 4rem 0;
-    max-height: 100vh;
-    overflow: auto;
-    pointer-events: none;
   }
 
   .modalWrap>.modal {
@@ -50,7 +44,7 @@
   outline: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .drawerContent {
     max-height: 100%;
     pointer-events: box-none;
@@ -73,7 +67,8 @@
 }
 
 /* Ensure bottom sheets (inside drawerContent) can shrink to any detent */
-.drawerContent .modal {
+.drawerContent .modal[data-presentation='formSheet'],
+.drawerContent .modal[data-presentation='containedModal'] {
   /* Reset inherited centering */
   position: relative;
   transform: none;
@@ -83,15 +78,7 @@
   max-height: none;
 }
 
-/* Ensure wrapper is disabled inside sheets */
-.drawerContent .modalWrap {
-  position: static;
-  display: block;
-  inset: unset;
-  align-items: unset;
-  justify-content: unset;
-  pointer-events: auto;
-}
+
 
 /* Form-sheet style (snap-point based) should be full width */
 .drawerContent .modal[data-presentation='formSheet'],
@@ -107,8 +94,10 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 55rem;
+  /* Use the same sizing variables as the primary desktop rule */
+  width: var(--modal-width, 580px);
+  min-width: var(--modal-min-width, auto);
+  max-width: var(--modal-max-width, 90vw);
   margin: 0;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   border-radius: var(--modal-radius, 8px);

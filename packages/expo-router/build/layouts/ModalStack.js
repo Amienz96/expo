@@ -58,99 +58,151 @@ exports.RouterModal = RouterModal;
 // Internal helper component
 function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, }) {
     const [open, setOpen] = react_1.default.useState(true);
+    // Determine layout based on viewport width (desktop vs mobile)
+    const isDesktop = useIsDesktop();
+    const isSheet = !isDesktop;
     // Resolve snap points logic.
     const allowed = options.sheetAllowedDetents;
     const isArrayDetents = Array.isArray(allowed);
     const useCustomSnapPoints = isArrayDetents && !(allowed.length === 1 && allowed[0] === 1);
-    const snapPoints = useCustomSnapPoints
+    let snapPoints = useCustomSnapPoints
         ? allowed
         : undefined;
+    if (!isSheet) {
+        snapPoints = [1];
+    }
     const [snap, setSnap] = react_1.default.useState(useCustomSnapPoints && isArrayDetents ? allowed[0] : 1);
+    // When the viewport flips between desktop <-> mobile, update snap value accordingly.
+    react_1.default.useEffect(() => {
+        if (isSheet) {
+            const next = useCustomSnapPoints && isArrayDetents ? allowed[0] : 1;
+            setSnap(next);
+        }
+        else {
+            // Desktop modal always fixed snap at 1
+            setSnap(1);
+        }
+    }, [isSheet]);
     // Map react-native-screens ios sheet undimmed logic to Vaul's fadeFromIndex
-    const fadeFromIndex = options.presentation === 'formSheet'
+    const fadeFromIndex = isSheet
         ? options.sheetLargestUndimmedDetentIndex === 'last'
             ? (snapPoints?.length ?? 0)
             : typeof options.sheetLargestUndimmedDetentIndex === 'number'
                 ? options.sheetLargestUndimmedDetentIndex + 1
                 : 0
         : 0;
-    // Merge provided contentStyle with defaults (applies to inner modal body)
-    const baseContentStyle = options.contentStyle &&
-        typeof options.contentStyle === 'object' &&
-        !Array.isArray(options.contentStyle)
-        ? options.contentStyle
-        : {};
-    const mergedContentStyle = {
+    // --- Styling -----------------------------------------------------------
+    // Using CSS variables so defaults live in CSS and can be overridden via props.
+    const modalStyleVars = {
         backgroundColor: themeColors.background,
-        ...baseContentStyle,
     };
-    // Apply modalWidth for non-sheet modals
-    if (options.presentation !== 'formSheet' && options.modalWidth != null) {
-        mergedContentStyle.width =
-            typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
-    }
-    // If user specifies a numeric maxHeight, clamp it to viewport height
-    if (mergedContentStyle.maxHeight != null && typeof mergedContentStyle.maxHeight === 'number') {
-        const h = mergedContentStyle.maxHeight;
-        mergedContentStyle.maxHeight = `min(${h}px, calc(100vh - 4rem))`;
-    }
-    const isSheet = options.presentation === 'formSheet';
-    // Provide a safe default maxHeight for desktop modal when none specified
-    if (!isSheet &&
-        (mergedContentStyle.maxHeight == null || mergedContentStyle.maxHeight === 'auto')) {
-        mergedContentStyle.maxHeight = 'calc(100vh - 8rem)'; // 4rem top + 4rem bottom breathing room
-    }
-    // Default minHeight for desktop modal if none specified
-    if (!isSheet && mergedContentStyle.minHeight == null) {
-        mergedContentStyle.minHeight = 'clamp(15rem, 30vh, calc(100vh - 8rem))';
-    }
-    // Clamp numeric minHeight to viewport
-    if (mergedContentStyle.minHeight != null && typeof mergedContentStyle.minHeight === 'number') {
-        const mh = mergedContentStyle.minHeight;
-        mergedContentStyle.minHeight = `min(${mh}px, calc(100vh - 8rem))`;
-    }
-    // Normalize shorthand `margin` so centred desktop modal keeps horizontal centring.
-    if (mergedContentStyle.margin != null &&
-        mergedContentStyle.marginLeft == null &&
-        mergedContentStyle.marginRight == null) {
-        const m = mergedContentStyle.margin;
-        // Remove shorthand to avoid conflict
-        delete mergedContentStyle.margin;
-        mergedContentStyle.marginTop = mergedContentStyle.marginTop ?? m;
-        mergedContentStyle.marginBottom = mergedContentStyle.marginBottom ?? m;
-        mergedContentStyle.marginLeft = 'auto';
-        mergedContentStyle.marginRight = 'auto';
-    }
-    const wrapperStyle = {};
-    if (options.sheetCornerRadius != null) {
-        if (!isSheet) {
-            wrapperStyle.borderRadius = options.sheetCornerRadius;
+    if (!isSheet) {
+        if (options.modalWidth != null) {
+            modalStyleVars['--modal-width'] =
+                typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
+            modalStyleVars['--modal-max-width'] =
+                typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
+            // Also set explicit width so browsers that ignore CSS vars in `width` prop still work.
+            modalStyleVars.width =
+                typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
         }
-        else {
-            wrapperStyle.borderTopLeftRadius = options.sheetCornerRadius;
-            wrapperStyle.borderTopRightRadius = options.sheetCornerRadius;
+        // Min width override
+        if (options.modalMinWidth != null) {
+            const mw = typeof options.modalMinWidth === 'number'
+                ? `${options.modalMinWidth}px`
+                : options.modalMinWidth;
+            modalStyleVars['--modal-min-width'] = mw;
+            modalStyleVars.minWidth = mw;
         }
+        if (options.modalHeight != null) {
+            const h = typeof options.modalHeight === 'number' ? `${options.modalHeight}px` : options.modalHeight;
+            modalStyleVars['--modal-height'] = h;
+            modalStyleVars.maxHeight = h;
+            modalStyleVars.height = h;
+            modalStyleVars.minHeight = h;
+        }
+        // Separate min-height override (takes precedence over modalHeight)
+        if (options.modalMinHeight != null) {
+            const mh = typeof options.modalMinHeight === 'number'
+                ? `${options.modalMinHeight}px`
+                : options.modalMinHeight;
+            modalStyleVars['--modal-min-height'] = mh;
+            modalStyleVars.minHeight = mh;
+        }
+    }
+    const fitToContents = isSheet && options.sheetAllowedDetents === 'fitToContents';
+    if (fitToContents) {
+        modalStyleVars.height = 'auto';
+        modalStyleVars.minHeight = 'auto';
+        // Allow sheet to grow with content but never exceed viewport height
+        modalStyleVars.maxHeight = 'calc(100vh)';
+    }
+    // Apply corner radius (default 10px)
+    const radiusValue = options.sheetCornerRadius ?? 10;
+    const radiusCss = typeof radiusValue === 'number' ? `${radiusValue}px` : radiusValue;
+    if (isSheet) {
+        // Only top corners for mobile sheet
+        modalStyleVars.borderTopLeftRadius = radiusCss;
+        modalStyleVars.borderTopRightRadius = radiusCss;
+    }
+    else {
+        // All corners for desktop modal
+        modalStyleVars.borderRadius = radiusCss;
+        modalStyleVars['--modal-radius'] = radiusCss;
     }
     const handleOpenChange = (open) => {
         if (!open)
             onDismiss();
     };
-    return (<vaul_1.Drawer.Root key={routeKey} open={open} snapPoints={snapPoints} activeSnapPoint={snap} setActiveSnapPoint={setSnap} shouldScaleBackground={options.presentation !== 'formSheet'} fadeFromIndex={fadeFromIndex} dismissible={options.gestureEnabled ?? true} onAnimationEnd={handleOpenChange} onOpenChange={setOpen}>
+    // Props that only make sense for sheets
+    const sheetProps = isSheet
+        ? {
+            snapPoints: snapPoints,
+            activeSnapPoint: snap,
+            setActiveSnapPoint: setSnap,
+            fadeFromIndex,
+        }
+        : {};
+    return (<vaul_1.Drawer.Root key={`${routeKey}-${isSheet ? 'sheet' : 'modal'}`} open={open} dismissible={options.gestureEnabled ?? true} onAnimationEnd={handleOpenChange} onOpenChange={setOpen} {...sheetProps}>
       <vaul_1.Drawer.Portal>
         <vaul_1.Drawer.Overlay style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}/>
-        <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{ ...wrapperStyle, pointerEvents: 'none' }}>
-          {!isSheet ? (<div className={modal_module_css_1.default.modalWrap}>
-              <div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
-                <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
-              </div>
-            </div>) : (<div className={modal_module_css_1.default.modal} data-presentation={options.presentation} style={mergedContentStyle}>
-              {options.sheetGrabberVisible && (<div className={modal_module_css_1.default.grabberRow}>
-                  <div className={modal_module_css_1.default.grabber}/>
-                </div>)}
-              <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
-            </div>)}
+        <vaul_1.Drawer.Content className={modal_module_css_1.default.drawerContent} style={{
+            pointerEvents: 'none',
+            ...(fitToContents ? { height: 'auto' } : null),
+        }}>
+          <div className={modal_module_css_1.default.modal} data-presentation={isSheet ? 'formSheet' : 'modal'} style={modalStyleVars}>
+            {options.sheetGrabberVisible && (<div className={modal_module_css_1.default.grabberRow}>
+                <div className={modal_module_css_1.default.grabber}/>
+              </div>)}
+            <div className={modal_module_css_1.default.modalBody}>{renderScreen()}</div>
+          </div>
         </vaul_1.Drawer.Content>
       </vaul_1.Drawer.Portal>
     </vaul_1.Drawer.Root>);
+}
+/**
+ * Hook that returns `true` when the viewport width is considered desktop-sized.
+ * The default breakpoint is 1024 px (iPad landscape and larger).
+ */
+function useIsDesktop(breakpoint = 1024) {
+    const isWeb = react_native_1.Platform.OS === 'web';
+    const [isDesktop, setIsDesktop] = react_1.default.useState(() => {
+        if (!isWeb || typeof window === 'undefined')
+            return false;
+        return window.matchMedia(`(min-width: ${breakpoint}px)`).matches;
+    });
+    react_1.default.useEffect(() => {
+        if (!isWeb || typeof window === 'undefined')
+            return;
+        const mql = window.matchMedia(`(min-width: ${breakpoint}px)`);
+        const listener = (e) => setIsDesktop(e.matches);
+        mql.addEventListener('change', listener);
+        // Ensure state is current
+        setIsDesktop(mql.matches);
+        return () => {
+            mql.removeEventListener('change', listener);
+        };
+    }, [breakpoint, isWeb]);
+    return isDesktop;
 }
 //# sourceMappingURL=ModalStack.js.map

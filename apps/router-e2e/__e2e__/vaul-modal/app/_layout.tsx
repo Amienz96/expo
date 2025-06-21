@@ -14,7 +14,6 @@ export default function Layout() {
           presentation: 'formSheet',
           sheetAllowedDetents: [0.5, 1],
           sheetGrabberVisible: true,
-          sheetCornerRadius: 16,
         }}
       />
       <Stack.Screen
@@ -23,11 +22,6 @@ export default function Layout() {
           presentation: 'formSheet',
           sheetAllowedDetents: [0.25, 0.5, 0.75, 0.98],
           sheetGrabberVisible: true,
-          sheetCornerRadius: 24,
-          contentStyle: {
-            width: '90%',
-            margin: 0,
-          },
         }}
       />
       <Stack.Screen
@@ -36,16 +30,15 @@ export default function Layout() {
           presentation: 'modal',
           sheetCornerRadius: 0,
           sheetAllowedDetents: 'fitToContents',
-          contentStyle: {
-            minHeight: 0,
-          },
         }}
       />
       <Stack.Screen
         name="modal-small"
         options={{
-          presentation: 'modal',
+          presentation: 'formSheet',
           sheetCornerRadius: 12,
+          modalMinHeight: 0,
+          sheetAllowedDetents: 'fitToContents',
         }}
       />
 
@@ -55,6 +48,7 @@ export default function Layout() {
           presentation: 'formSheet',
           sheetAllowedDetents: 'fitToContents',
           sheetGrabberVisible: true,
+          sheetCornerRadius: 10,
         }}
       />
       <Stack.Screen
@@ -64,22 +58,6 @@ export default function Layout() {
           sheetAllowedDetents: [0.5, 1],
           sheetCornerRadius: 32,
           sheetGrabberVisible: true,
-        }}
-      />
-      <Stack.Screen
-        name="modal-width-example"
-        options={{
-          presentation: 'modal',
-          modalWidth: 500,
-          sheetCornerRadius: 16,
-        }}
-      />
-      <Stack.Screen
-        name="modal-width-percentage"
-        options={{
-          presentation: 'modal',
-          modalWidth: '60%',
-          sheetCornerRadius: 16,
         }}
       />
     </Stack>

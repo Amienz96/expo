@@ -39,6 +39,26 @@ export type ExtendedStackNavigationOptions = NativeStackNavigationOptions & {
    * @platform web
    */
   modalWidth?: number | string;
+  /**
+   * Override the height of the modal (px or percentage). Applies on web desktop.
+   * @platform web
+   */
+  modalHeight?: number | string;
+  /**
+   * Space around the modal/lightbox in desktop mode (px or percentage).
+   * @platform web
+   */
+  gutter?: number | string;
+  /**
+   * Minimum height of the desktop modal (px or percentage). Overrides the default 640px clamp.
+   * @platform web
+   */
+  modalMinHeight?: number | string;
+  /**
+   * Minimum width of the desktop modal (px or percentage). Overrides the default 580px.
+   * @platform web
+   */
+  modalMinWidth?: number | string;
 };
 
 const RNStack = withLayoutContext<
