@@ -12,7 +12,7 @@ export default function Layout() {
         name="modal"
         options={{
           presentation: 'formSheet',
-          sheetAllowedDetents: [0.5, 0.97],
+          sheetAllowedDetents: [0.5, 1],
           sheetGrabberVisible: true,
           sheetCornerRadius: 16,
         }}
@@ -46,17 +46,9 @@ export default function Layout() {
         options={{
           presentation: 'modal',
           sheetCornerRadius: 12,
-          contentStyle: { maxHeight: 300, width: 350 },
         }}
       />
-      <Stack.Screen
-        name="modal-margin"
-        options={{
-          presentation: 'fullScreenModal',
-          sheetCornerRadius: 16,
-          contentStyle: { marginTop: 40, marginBottom: 40 },
-        }}
-      />
+
       <Stack.Screen
         name="sheet-fit"
         options={{
@@ -72,6 +64,22 @@ export default function Layout() {
           sheetAllowedDetents: [0.5, 1],
           sheetCornerRadius: 32,
           sheetGrabberVisible: true,
+        }}
+      />
+      <Stack.Screen
+        name="modal-width-example"
+        options={{
+          presentation: 'modal',
+          modalWidth: 500,
+          sheetCornerRadius: 16,
+        }}
+      />
+      <Stack.Screen
+        name="modal-width-percentage"
+        options={{
+          presentation: 'modal',
+          modalWidth: '60%',
+          sheetCornerRadius: 16,
         }}
       />
     </Stack>

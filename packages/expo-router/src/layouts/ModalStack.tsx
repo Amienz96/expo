@@ -6,29 +6,18 @@ import {
   useNavigationBuilder,
   useTheme,
 } from '@react-navigation/native';
-import { NativeStackNavigationOptions, NativeStackView } from '@react-navigation/native-stack';
+import { NativeStackView } from '@react-navigation/native-stack';
 import React from 'react';
 import { Platform } from 'react-native';
 import { Drawer } from 'vaul';
 
+import { ExtendedStackNavigationOptions } from './StackClient';
 import { withLayoutContext } from './withLayoutContext';
 import modalStyles from '../../assets/modal.module.css';
 
-/** Extend NativeStackNavigationOptions with extra sheet/detent props */
-type ModalStackNavigationOptions = NativeStackNavigationOptions & {
-  presentation?: 'modal' | 'formSheet' | 'containedModal' | 'card' | 'fullScreenModal';
-  sheetAllowedDetents?: (number | string)[];
-  sheetInitialDetentIndex?: number;
-  sheetGrabberVisible?: boolean;
-  /** Largest detent index that remains undimmed (matches iOS). Accepts numeric index, 'none', or 'last'. */
-  sheetLargestUndimmedDetentIndex?: number | 'none' | 'last';
-  /** Override the corner radius (px) applied to the top of the drawer sheet. */
-  sheetCornerRadius?: number;
-};
-
 type Props = {
   initialRouteName?: string;
-  screenOptions?: ModalStackNavigationOptions;
+  screenOptions?: ExtendedStackNavigationOptions;
   children: React.ReactNode;
 };
 
@@ -67,7 +56,7 @@ function ModalStackView({
     {
       navigation: any;
       route: any;
-      options: ModalStackNavigationOptions;
+      options: ExtendedStackNavigationOptions;
       render: () => React.ReactNode;
     }
   >;
@@ -114,7 +103,7 @@ function ModalStackView({
             <RouteDrawer
               key={route.key}
               routeKey={route.key}
-              options={descriptors[route.key].options as ModalStackNavigationOptions}
+              options={descriptors[route.key].options as ExtendedStackNavigationOptions}
               renderScreen={descriptors[route.key].render}
               onDismiss={() => navigation.goBack()}
               themeColors={colors}
@@ -140,7 +129,7 @@ function RouteDrawer({
   themeColors,
 }: {
   routeKey: string;
-  options: ModalStackNavigationOptions;
+  options: ExtendedStackNavigationOptions;
   renderScreen: () => React.ReactNode;
   onDismiss: () => void;
   themeColors: { card: string; background: string };
@@ -182,6 +171,12 @@ function RouteDrawer({
     backgroundColor: themeColors.background,
     ...baseContentStyle,
   };
+
+  // Apply modalWidth for non-sheet modals
+  if (options.presentation !== 'formSheet' && options.modalWidth != null) {
+    mergedContentStyle.width =
+      typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
+  }
 
   // If user specifies a numeric maxHeight, clamp it to viewport height
   if (mergedContentStyle.maxHeight != null && typeof mergedContentStyle.maxHeight === 'number') {

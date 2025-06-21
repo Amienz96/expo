@@ -84,6 +84,11 @@ function RouteDrawer({ routeKey, options, renderScreen, onDismiss, themeColors, 
         backgroundColor: themeColors.background,
         ...baseContentStyle,
     };
+    // Apply modalWidth for non-sheet modals
+    if (options.presentation !== 'formSheet' && options.modalWidth != null) {
+        mergedContentStyle.width =
+            typeof options.modalWidth === 'number' ? `${options.modalWidth}px` : options.modalWidth;
+    }
     // If user specifies a numeric maxHeight, clamp it to viewport height
     if (mergedContentStyle.maxHeight != null && typeof mergedContentStyle.maxHeight === 'number') {
         const h = mergedContentStyle.maxHeight;

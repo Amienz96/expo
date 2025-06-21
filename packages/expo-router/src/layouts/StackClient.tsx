@@ -18,7 +18,9 @@ import {
 } from '@react-navigation/native-stack';
 import { nanoid } from 'nanoid/non-secure';
 import { ComponentProps } from 'react';
+import { Platform } from 'react-native';
 
+import { RouterModal } from './ModalStack';
 import { withLayoutContext } from './withLayoutContext';
 import { SingularOptions, getSingularId } from '../useScreens';
 import { Protected } from '../views/Protected';
@@ -27,8 +29,20 @@ type GetId = NonNullable<RouterConfigOptions['routeGetIdList'][string]>;
 
 const NativeStackNavigator = createNativeStackNavigator().Navigator;
 
+/**
+ * We extend NativeStackNavigationOptions with our custom props
+ * to allow for several extra props to be used on web, like modalWidth
+ */
+export type ExtendedStackNavigationOptions = NativeStackNavigationOptions & {
+  /**
+   * Override the width of the modal (px or percentage). Only applies on web platform.
+   * @platform web
+   */
+  modalWidth?: number | string;
+};
+
 const RNStack = withLayoutContext<
-  NativeStackNavigationOptions,
+  ExtendedStackNavigationOptions,
   typeof NativeStackNavigator,
   StackNavigationState<ParamListBase>,
   NativeStackNavigationEventMap
@@ -334,7 +348,13 @@ function filterSingular<
 
 const Stack = Object.assign(
   (props: ComponentProps<typeof RNStack>) => {
-    return <RNStack {...props} UNSTABLE_router={stackRouterOverride} />;
+    const isWeb = Platform.OS === 'web';
+
+    if (isWeb) {
+      return <RouterModal {...props} UNSTABLE_router={stackRouterOverride} />;
+    } else {
+      return <RNStack {...props} UNSTABLE_router={stackRouterOverride} />;
+    }
   },
   {
     Screen: RNStack.Screen as (
